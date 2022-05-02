@@ -61,6 +61,12 @@ async function run() {
             res.send(result);
         })
 
+        //add data
+        app.post('/additem', async(req, res)=>{
+            const newItem = req.body;
+             const result = await data_collection.insertOne(newItem);
+             res.send(result);
+        })
 
     } catch (error) {
         console.dir(error);
