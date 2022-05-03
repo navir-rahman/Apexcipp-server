@@ -5,12 +5,30 @@ const cors = require('cors');
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
-
+const jwt= require('jsonwebtoken')
 const app = express();
 
 //midelware
 app.use(cors())
 app.use(express.json());
+
+
+//jwt function
+function varifyjwt(req,res, next){
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: 'unauthorized access' });
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden access' });
+        }
+        console.log('decoded', decoded);
+        req.decoded = decoded;
+        next();
+    })
+}
 
 //conect mongo
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.p6x0e.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
@@ -25,7 +43,17 @@ async function run() {
     try {
         await client.connect();
         const data_collection = client.db("assignment11").collection('products');
+        const user_collection = client.db("assignment11").collection('userProducts');
 
+
+        //authentication
+        app.post('/login', async(req,res)=>{
+            const user= req.body;
+            const access_token= jwt.sign(user, process.env.ACCESS_TOKEN_SECRET,{
+                expiresIn: '30d'
+            });
+            res.send({access_token})
+        })
         //all data
         app.get('/all', async (req, res)=>{
 
@@ -38,7 +66,6 @@ async function run() {
         //single product
         app.get('/item/:id', async( req, res)=>{
             const id = req.params.id;
-            console.log(id);
             const query = {_id: ObjectId(id)};
             const item= await data_collection.findOne(query);
             res.send(item)
@@ -48,7 +75,6 @@ async function run() {
         app.post('/item/update/:id', async(req, res)=>{
             const id = req.params.id;
             const newquantity = req.body.quantity;
-            console.log(newquantity);
             const update = await data_collection.updateOne({_id:ObjectId(id)},{$set:{qun:newquantity}})
             res.send(update);
         })
@@ -66,6 +92,28 @@ async function run() {
             const newItem = req.body;
              const result = await data_collection.insertOne(newItem);
              res.send(result);
+        })
+        //add my item
+        app.post('/addmyitem', async(req, res)=>{
+            const newItem = req.body;
+             const result = await user_collection.insertOne(newItem);
+             res.send(result);
+        })
+
+        // user data collection
+
+        app.get('/alluseritem', varifyjwt, async(req, res)=>{
+            const decodedEmail = req.decoded?.email;
+            const email = req.query.email;
+            console.log(email,decodedEmail);
+            // if(email = decodedEmail){
+                const query = {email: email};
+                const cursor= user_collection.find(query);
+                const item= await cursor.toArray();
+                res.send(item)
+            // }else{
+            //     res.status(403).send({message: 'forbidden access'})
+            // }
         })
 
     } catch (error) {
