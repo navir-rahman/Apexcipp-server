@@ -1,5 +1,3 @@
-//user assignment11
-//pass hCyDZ22co3lvMmPh
 const express = require('express');
 const cors = require('cors');
 const port = process.env.PORT || 5000;
