@@ -18,11 +18,11 @@ function varifyjwt(req,res, next){
         return res.status(401).send({ message: 'unauthorized access' });
     }
     const token = authHeader.split(' ')[1];
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    jwt.verify (token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         if (err) {
             return res.status(403).send({ message: 'Forbidden access' });
         }
-        console.log('decoded', decoded);
+        //console.log('decoded', decoded);
         req.decoded = decoded;
         next();
     })
@@ -54,9 +54,15 @@ async function run() {
         })
         //all data
         app.get('/all', async (req, res)=>{
-
             const query = {};
             const cursor = data_collection.find(query);
+            const products=await cursor.toArray();
+            res.send(products);
+        })
+        //all data
+        app.get('/sixInfo', async (req, res)=>{
+            const query = {};
+            const cursor = data_collection.find(query).limit(6);
             const products=await cursor.toArray();
             res.send(products);
         })
@@ -85,6 +91,23 @@ async function run() {
             res.send(result);
         })
 
+
+        //update user item
+        app.post('/item/userupdate/:id', async(req, res)=>{
+            const id = req.params.id;
+            const newquantity = req.body.quantity;
+            const update = await user_collection.updateOne({_id:ObjectId(id)},{$set:{qun:newquantity}})
+            res.send(update);
+        })
+
+        //delete user item
+        app.delete('/useritem/delete/:id', async(req, res)=>{
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const result = await user_collection.deleteOne(query);
+            res.send(result);
+        })
+
         //add data
         app.post('/additem', async(req, res)=>{
             const newItem = req.body;
@@ -103,15 +126,15 @@ async function run() {
         app.get('/alluseritem', varifyjwt, async(req, res)=>{
             const decodedEmail = req.decoded?.email;
             const email = req.query.email;
-            console.log(email,decodedEmail);
-            // if(email = decodedEmail){
+            console.log('line 112', email,decodedEmail);
+             if(email === decodedEmail){
                 const query = {email: email};
                 const cursor= user_collection.find(query);
                 const item= await cursor.toArray();
                 res.send(item)
-            // }else{
-            //     res.status(403).send({message: 'forbidden access'})
-            // }
+            }else{
+                res.status(403).send({message: 'forbidden access'})
+            }
         })
 
     } catch (error) {
