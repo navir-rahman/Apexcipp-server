@@ -42,7 +42,8 @@ async function run() {
         await client.connect();
         const data_collection = client.db("assignment11").collection('products');
         const user_collection = client.db("assignment11").collection('userProducts');
-
+        //subscriber database
+        const subscriber_collection = client.db('assignment11').collection('subscribier');
 
         //authentication
         app.post('/login', async(req,res)=>{
@@ -138,6 +139,7 @@ async function run() {
         })
 
         // add subcribier
+
 
         
 
