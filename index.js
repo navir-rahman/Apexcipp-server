@@ -44,7 +44,7 @@ async function run() {
         const user_collection = client.db("assignment11").collection('userProducts');
 
 
-        //authenticatio
+        //authentication
         app.post('/login', async(req,res)=>{
             const user= req.body;
             const access_token= jwt.sign(user, process.env.ACCESS_TOKEN_SECRET,{
