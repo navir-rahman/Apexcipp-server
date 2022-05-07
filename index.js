@@ -139,7 +139,7 @@ async function run() {
         })
 
         // add subcribier
-        app.post('subs', async(req, res)=>{
+        app.post('/subs', async(req, res)=>{
             const subcriber = req.body;
             const server_response =await subscriber_collection.insertOne(subcriber)
             res.send(server_response);
